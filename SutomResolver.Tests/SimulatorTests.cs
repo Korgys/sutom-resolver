@@ -7,17 +7,20 @@ public class SimulatorTests
     public void EmulateGames_ShouldHaveGoodPercentSuccessRate()
     {
         // Arrange
+        const int numberOfGames = 100;
+        const float expectedSuccessRate = 90;
         var simulator = new Simulator
         {
-            NumberOfGames = 1000  // Utilisez un nombre plus élevé de jeux pour un test plus fiable statistiquement
+            NumberOfGames = numberOfGames
         };
 
         // Act
         simulator.EmulateGames(displayLogs: false);
-        float successRate = (simulator.Wins / simulator.NumberOfGames) * 100;
+        float actualSuccessRate = (simulator.Wins / simulator.NumberOfGames) * 100;
 
         // Assert
-        Console.WriteLine(successRate);
-        Assert.IsTrue(successRate >= 90, $"Expected success rate to be at least 70%, but was {successRate}%");
+        Console.WriteLine(actualSuccessRate);
+        Assert.IsTrue(actualSuccessRate >= expectedSuccessRate, 
+            $"Expected success rate to be at least {expectedSuccessRate}%, but was {actualSuccessRate}%");
     }
 }

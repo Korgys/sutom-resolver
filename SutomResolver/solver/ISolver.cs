@@ -2,6 +2,8 @@
 
 public interface ISolver
 {
-    public string GetNextGuess();
-    public void ProcessResponse(string guess, string result);
+    List<string> RemainingWords { get; }
+    void Initialize(string pattern);
+    string GetNextGuess();
+    void ProcessResponse(string guess, string response);
 }
