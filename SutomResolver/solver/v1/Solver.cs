@@ -1,24 +1,21 @@
 ﻿namespace SutomResolver.solver.v1;
 
-/******************************************************************
-* Games : 10000
-* Wins : 5670
-* Loses : 4330
-* Turns : 3,9076
- *****************************************************************/
-
 /// <summary>
 /// Stratégie simple qui renvoie le premier mot de la liste répondant aux lettres trouvées et dévoilées.
+/// Elimine les mots contenant des lettres absentes ou ceux ne correspondant pas au pattern.
 /// </summary>
+/// <remarks>
+/// Games : 10000 | Win ratio : 78,12% | Turns per game : 4,3807
+/// </remarks>
 public class Solver : ISolver
 {
+    private HashSet<char> AbsentLetters { get; set; }
     public List<string> RemainingWords { get; set; }
-    private HashSet<char> AbsentLetters { get; set; } = new HashSet<char>();
-    
+
     public void Initialize(string pattern)
     {
+        AbsentLetters = [];
         RemainingWords = SutomHelper.LoadWordsFromFile(pattern.Length, pattern[0] != '_' ? pattern[0] : null);
-        AbsentLetters = new HashSet<char>();
     }
 
     public string GetNextGuess()

@@ -63,7 +63,7 @@ internal static class SolverHelper
                 if (misplacedLetters != null && misplacedLetters.All(word.Contains))
                 {
                     // Vérification de la sécurité d'accès à ImpossiblePatterns
-                    if (impossiblePatterns != null &&
+                    if (impossiblePatterns == null ||
                         impossiblePatterns.All(ip => ip.Length > i && ip[i] != word[i]))
                     {
                         continue;

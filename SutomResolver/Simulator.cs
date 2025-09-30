@@ -6,7 +6,7 @@ namespace SutomResolver;
 
 public class Simulator<T> where T : ISolver, new()
 {
-    public T Solver { get; set; } = new T(); // IA Utilisée pour résoudre le mot
+    public T Solver { get; set; } = new T(); // Stratégie IA utilisée pour résoudre le mot
     public int NumberOfGames { get; set; } = 10000;
     public float Turns { get; set; } = 0;
     public float Wins { get; set; } = 0;
@@ -23,7 +23,6 @@ public class Simulator<T> where T : ISolver, new()
         {
             // Mot à deviner
             var targetWord = NormalizeString(SutomHelper.AllWords[random.Next(SutomHelper.AllWords.Count)].ToUpper());
-            //var targetWord = "LIMITAIENT";
             Console.WriteLine($"{i}) Mot à deviner : {targetWord}");
 
             // Exemple ____ pour LAIT
@@ -32,40 +31,31 @@ public class Simulator<T> where T : ISolver, new()
             turns = 1;
             var maxTurns = 6;
 
-            while (turns <= maxTurns)
+            while (turns <= maxTurns) // 6 tours max
             {
-                var guess = Solver.GetNextGuess();
-                if (string.IsNullOrEmpty(guess))
+                var guess = Solver.GetNextGuess(); // Détermine un potentiel candidat pour le mot à deviner
+                if (string.IsNullOrEmpty(guess)) // Peut arriver si le mot n'est pas connu du dictionnaire du solveur ou si le solveur est mal codé
                 {
                     if (displayLogs)
                     {
                         Console.WriteLine("Le solveur n'a trouvé aucun mot correspondant.");
                     }
-                    Loses++;
+                    Loses++; // Considéré comme une défaite évidemment
                     break;
                 }
 
-                if (displayLogs)
-                {
-                    Console.WriteLine($"Le solveur propose : {guess}");
-                }
+                if (displayLogs) Console.WriteLine($"Le solveur propose : {guess}");
 
-                if (guess == targetWord)
+                if (guess == targetWord) // Victoire
                 {
-                    if (displayLogs)
-                    {
-                        Console.WriteLine("Le solveur a trouvé le mot !");
-                    }
+                    if (displayLogs) Console.WriteLine("Le solveur a trouvé le mot !");
                     Wins++;
                     break;
                 }
 
+                // Analyse de la réponse pour déterminer les lettres correctes, mal placées ou absentes
                 var result = SutomHelper.GetResultFromGuess(guess, targetWord);
-                if (displayLogs)
-                {
-                    Console.WriteLine($"Réponse: {result}");
-                }
-
+                if (displayLogs) Console.WriteLine($"Réponse: {result}");
                 Solver.ProcessResponse(guess, result);
                 turns++;
             }
