@@ -1,18 +1,21 @@
-﻿using SutomResolver.solver.v3;
+﻿using SutomResolver.solver;
 using System.Globalization;
 using System.Text;
 
 namespace SutomResolver;
 
-public class Simulator
+public class Simulator<T> where T : ISolver, new()
 {
-    public int NumberOfGames { get; set; } = 10;
+    public T Solver { get; set; } = new T(); // Stratégie IA utilisée pour résoudre le mot
+    public int NumberOfGames { get; set; } = 10000;
     public float Turns { get; set; } = 0;
     public float Wins { get; set; } = 0;
     public float Loses { get; set; } = 0;
-
+    public long Runtime {  get; set; } = 0;
+    
     public void EmulateGames(bool displayLogs = true)
     {
+        var watch = System.Diagnostics.Stopwatch.StartNew();
         Random random = new Random();
         int turns;
 
@@ -24,45 +27,36 @@ public class Simulator
 
             // Exemple ____ pour LAIT
             var pattern = new string('_', targetWord.Length);
-            var solver = new Solver(pattern);
+            Solver.Initialize(pattern);
             turns = 1;
             var maxTurns = 6;
 
-            while (turns <= maxTurns)
+            while (turns <= maxTurns) // 6 tours max
             {
-                var guess = solver.GetNextGuess();
-                if (string.IsNullOrEmpty(guess))
+                var guess = Solver.GetNextGuess(); // Détermine un potentiel candidat pour le mot à deviner
+                if (string.IsNullOrEmpty(guess)) // Peut arriver si le mot n'est pas connu du dictionnaire du solveur ou si le solveur est mal codé
                 {
                     if (displayLogs)
                     {
                         Console.WriteLine("Le solveur n'a trouvé aucun mot correspondant.");
                     }
-                    Loses++;
+                    Loses++; // Considéré comme une défaite évidemment
                     break;
                 }
 
-                if (displayLogs)
-                {
-                    Console.WriteLine($"Le solveur propose : {guess}");
-                }
+                if (displayLogs) Console.WriteLine($"Le solveur propose : {guess}");
 
-                if (guess == targetWord)
+                if (guess == targetWord) // Victoire
                 {
-                    if (displayLogs)
-                    {
-                        Console.WriteLine("Le solveur a trouvé le mot !");
-                    }
+                    if (displayLogs) Console.WriteLine("Le solveur a trouvé le mot !");
                     Wins++;
                     break;
                 }
 
+                // Analyse de la réponse pour déterminer les lettres correctes, mal placées ou absentes
                 var result = SutomHelper.GetResultFromGuess(guess, targetWord);
-                if (displayLogs)
-                {
-                    Console.WriteLine($"Réponse: {result}");
-                }
-                
-                solver.ProcessResponse(guess, result);
+                if (displayLogs) Console.WriteLine($"Réponse: {result}");
+                Solver.ProcessResponse(guess, result);
                 turns++;
             }
 
@@ -74,13 +68,16 @@ public class Simulator
         }
 
         Turns /= NumberOfGames;
+        watch.Stop();
+        Runtime = watch.ElapsedMilliseconds;
     }
 
     public static void GuessWord()
     {
-        Console.Write("Entrez le pattern du word à trouver (ex: L___) : ");
+        Console.Write("Entrez le pattern du mot à trouver (ex: L___) : ");
         var pattern = Console.ReadLine();
-        var solver = new Solver(pattern);
+        var solver = new T();
+        solver.Initialize(pattern);
         var displayRules = true;
 
         while (true)
@@ -92,7 +89,7 @@ public class Simulator
                 break;
             }
 
-            if (solver.Words.Count == 1)
+            if (solver.RemainingWords.Count == 1)
             {
                 Console.WriteLine($"Le solveur a trouvé : {guess}");
                 break;
@@ -102,14 +99,14 @@ public class Simulator
 
             if (displayRules)
             {
-                Console.WriteLine($"Testez ce mot et entrez la retour avec : ");
+                Console.WriteLine("Testez ce mot et entrez la réponse avec : ");
                 Console.WriteLine("- '?' ou '_' pour les lettres manquantes.");
                 Console.WriteLine("- '+' pour les lettres mal placées.");
                 Console.WriteLine("- la lettre si correcte.\n");
                 displayRules = false;
             }
 
-            Console.Write($"Entrez le pattern du word à trouver : ");
+            Console.Write("Entrez le pattern du mot à trouver : ");
             var result = Console.ReadLine();
 
             if (guess == result)
@@ -121,15 +118,26 @@ public class Simulator
             solver.ProcessResponse(guess, result);
         }
     }
-
+    
+   /// <summary>
+   /// Affiche les statistiques suite à l'utilisation de la méthode EmulateGames.
+   /// </summary>
     public void DisplayStatsResult()
     {
+        Console.WriteLine();
+        Console.WriteLine($"Algo : {Solver.GetType()}");
         Console.WriteLine($"Games : {NumberOfGames}");
         Console.WriteLine($"Wins : {Wins}");
         Console.WriteLine($"Loses : {Loses}");
         Console.WriteLine($"Turns : {Turns}");
+        Console.WriteLine($"Runtime : {Runtime}");
     }
 
+    /// <summary>
+    /// Formatte le mot reçu lors de l'émulation des jeux.
+    /// </summary>
+    /// <param name="input"></param>
+    /// <returns></returns>
     private static string NormalizeString(string input)
     {
         var normalizedString = input.Normalize(NormalizationForm.FormD);
