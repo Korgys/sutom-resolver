@@ -1,4 +1,6 @@
-﻿namespace SutomResolver.solver;
+﻿using System.Numerics;
+
+namespace SutomResolver.solver;
 
 internal static class SolverHelper
 {
@@ -33,60 +35,101 @@ internal static class SolverHelper
     }
 
     internal static bool MatchesPattern(
-        string word, 
-        string pattern, 
-        HashSet<char> misplacedLetters, 
-        HashSet<char> absentLetters,
-        List<string> impossiblePatterns)
+        string word,
+        string pattern,
+        HashSet<char>? misplacedLetters,
+        HashSet<char>? absentLetters,
+        List<string>? impossiblePatterns)
     {
-        for (int i = 0; i < word.Length; i++)
+        // Vérifie la longueur du mot
+        int n = word.Length;
+        if (pattern.Length != n) return false;
+
+        // Le mot doit contenir TOUTES les lettres "mal placées"
+        if (misplacedLetters is { Count: > 0 })
         {
-            // Les lettres correspondent
-            if (pattern[i] == word[i])
-                continue;
-
-            // Vérification des lettres absentes
-            if (absentLetters != null &&
-                absentLetters.Any(l => l == word[i] && !pattern.Contains(l)))
+            foreach (var c in misplacedLetters)
             {
-                return false;
+                if (word.IndexOf(c) < 0) return false;
             }
+        }
 
-            // Lettres inconnues ou "joker" dans le pattern
-            if (pattern[i] == '?' || pattern[i] == '_')
-                continue;
+        // Lettres interdites par position (à partir des "impossiblePatterns")
+        HashSet<char>[]? forbidden = null;
+        if (impossiblePatterns is { Count: > 0 })
+        {
+            forbidden = new HashSet<char>[n];
+            for (int i = 0; i < n; i++) forbidden[i] = new HashSet<char>();
 
-            // Lettres mal placées et patterns impossibles
-            if (pattern[i] == '+')
+            foreach (var ip in impossiblePatterns)
             {
-                // Vérification de la cohérence avec misplacedLetters
-                if (misplacedLetters != null && misplacedLetters.All(word.Contains))
+                if (string.IsNullOrEmpty(ip)) continue;
+                int m = Math.Min(ip.Length, n);
+                for (int i = 0; i < m; i++)
                 {
-                    // Vérification de la sécurité d'accès à ImpossiblePatterns
-                    if (impossiblePatterns == null ||
-                        impossiblePatterns.All(ip => ip.Length > i && ip[i] != word[i]))
-                    {
-                        continue;
-                    }
+                    char f = ip[i];
+                    // On n'ajoute que de vraies lettres interdites (pas '_', '?', '+')
+                    if (f != '_' && f != '?' && f != '+') forbidden[i].Add(f);
                 }
             }
+        }
 
-            // Si aucune des conditions n'est remplie, le mot ne correspond pas
-            return false;
+        // Vérif positionnelle
+        for (int i = 0; i < n; i++)
+        {
+            char p = pattern[i];
+            char c = word[i];
+
+            // Si le pattern fixe une lettre explicite à cette position, elle doit matcher
+            if (p != '_' && p != '?' && p != '+')
+            {
+                if (c != p) return false;
+                if (forbidden is not null && forbidden[i].Contains(c)) return false;
+                continue;
+            }
+
+            // Dans tous les cas, ne pas violer une interdiction explicite à cette position
+            if (forbidden is not null && forbidden[i].Contains(c)) return false;
+
+            if (p == '+')
+            {
+                // '+' = lettre présente dans le mot mais pas à cette position.
+                // La présence globale a déjà été vérifiée au pré-check.
+                // Le "pas à cette position" est géré par forbidden[] construit depuis les patterns impossibles.
+                continue;
+            }
+
+            // '_' ou '?' : cette lettre ne doit pas faire partie des "absentes"
+            if (absentLetters is not null && absentLetters.Contains(c)) return false;
         }
 
         return true;
     }
 
-    internal static HashSet<char> UpdateAbsentLetters(HashSet<char> absentLetters, string word, string pattern, HashSet<char> misplacedLetters)
+
+    internal static void UpdateAbsentLetters(HashSet<char> absentLetters, string word, string pattern, HashSet<char> misplacedLetters)
     {
         for (int i = 0; i < pattern.Length; i++)
         {
-            if (pattern[i] == '_' && !absentLetters.Contains(word[i]) && !misplacedLetters.Contains(word[i]))
+            if (pattern[i] == '_')
             {
-                absentLetters.Add(word[i]);
+                char c = word[i];
+                if (!misplacedLetters.Contains(c))
+                    absentLetters.Add(c); // Si doublon, il sera ignoré par le HashSet
             }
         }
-        return absentLetters;
+    }
+
+    /// <summary>
+    /// Méthode utilitaire pour compter le nombre de lettres distinctes dans un mot.
+    /// Plus performant que word.Distinct().Count() car évite la création d'une collection intermédiaire.
+    /// </summary>
+    /// <param name="word"></param>
+    /// <returns></returns>
+    public static int CountDistinctLetters(string word)
+    {
+        var set = new HashSet<char>();
+        foreach (var letter in word) set.Add(letter);
+        return set.Count;
     }
 }

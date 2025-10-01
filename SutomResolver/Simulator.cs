@@ -1,4 +1,5 @@
 ﻿using SutomResolver.solver;
+using System.Diagnostics;
 using System.Globalization;
 using System.Text;
 
@@ -15,7 +16,7 @@ public class Simulator<T> where T : ISolver, new()
     
     public void EmulateGames(bool displayLogs = true)
     {
-        var watch = System.Diagnostics.Stopwatch.StartNew();
+        var watch = Stopwatch.StartNew();
         Random random = new Random();
         int turns;
 

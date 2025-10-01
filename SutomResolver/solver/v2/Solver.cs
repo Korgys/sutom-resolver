@@ -4,7 +4,7 @@
 /// Stratégie qui prend en compte les pattern impossibles pour filtrer.
 /// </summary>
 /// <remarks>
-/// Games : 10000 | Win ratio : 95,83% | Turns per game : 3,4934
+/// Games : 10000 | Win ratio : 98,52% | Turns per game : 3,71
 /// </remarks>
 public class Solver : ISolver
 {
@@ -16,7 +16,7 @@ public class Solver : ISolver
     {
         AbsentLetters = [];
         ImpossiblePatterns = [];
-        RemainingWords = SutomHelper.LoadWordsFromFile(pattern.Length, pattern[0] != '_' ? pattern[0] : null);
+        RemainingWords = SutomHelper.LoadWordsFromFile(pattern.Length);
     }
 
     public string GetNextGuess()

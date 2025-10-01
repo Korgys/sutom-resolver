@@ -7,7 +7,7 @@
 /// Prends également en compte les patterns impossibles pour filtrer (V2).
 /// </summary>
 /// <remarks>
-/// Games : 10000 | Win ratio : 99,04% | Turns per game : 3,2625
+/// Games : 10000 | Win ratio : 99,04% | Turns per game : 3,52
 /// </remarks>
 public class Solver : ISolver
 {
@@ -20,7 +20,7 @@ public class Solver : ISolver
     {
         AbsentLetters = [];
         ImpossiblePatterns = [];
-        RemainingWords = SutomHelper.LoadWordsFromFile(pattern.Length, pattern[0] != '_' ? pattern[0] : null);
+        RemainingWords = SutomHelper.LoadWordsFromFile(pattern.Length);
         HeuristicValues = HeuristicsStatsHelper.GetHeuristicValues(RemainingWords, pattern);
     }
 

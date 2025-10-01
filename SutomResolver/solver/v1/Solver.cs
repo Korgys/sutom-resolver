@@ -5,24 +5,24 @@
 /// Elimine les mots contenant des lettres absentes ou ceux ne correspondant pas au pattern.
 /// </summary>
 /// <remarks>
-/// Games : 10000 | Win ratio : 78,12% | Turns per game : 4,3807
+/// Games : 10000 | Win ratio : 88,34% | Turns per game : 4,42
 /// </remarks>
 public class Solver : ISolver
 {
-    private HashSet<char> AbsentLetters { get; set; }
+    public HashSet<char> AbsentLetters { get; set; }
     public List<string> RemainingWords { get; set; }
 
     public void Initialize(string pattern)
     {
         AbsentLetters = [];
-        RemainingWords = SutomHelper.LoadWordsFromFile(pattern.Length, pattern[0] != '_' ? pattern[0] : null);
+        RemainingWords = SutomHelper.LoadWordsFromFile(pattern.Length);
     }
 
     public string GetNextGuess()
     {
         return RemainingWords
-            .OrderByDescending(word => word.Distinct().Count())
-            .FirstOrDefault()?.ToUpper();
+            .MaxBy(SolverHelper.CountDistinctLetters) // Privilégie le mot avec le plus de lettres distinctes
+            .ToUpperInvariant();
     }
 
     public void ProcessResponse(string guess, string result)
