@@ -90,7 +90,7 @@ public class Simulator<T> where T : ISolver, new()
                 break;
             }
 
-            if (solver.RemainingWords.Count == 1)
+            if (solver.CandidatesWords.Count == 1)
             {
                 Console.WriteLine($"Le solveur a trouvé : {guess}");
                 break;

@@ -4,9 +4,9 @@ public class HeuristicsStatsHelper
 {
     private static Dictionary<string, List<Dictionary<char, int>>> HeuristicValuesCache { get; set; } = [];
 
-    public static List<Dictionary<char, int>> GetHeuristicValues(List<string> words, string pattern)
+    public static List<Dictionary<char, int>> GetHeuristicValues(List<string> words, string pattern, bool useCache = true)
     {
-        if (HeuristicValuesCache.ContainsKey(pattern))
+        if (useCache && HeuristicValuesCache.ContainsKey(pattern))
         {
             return HeuristicValuesCache[pattern];
         }
@@ -29,7 +29,10 @@ public class HeuristicsStatsHelper
             }
         }
 
-        HeuristicValuesCache.Add(pattern, heuristicsValues);
+        if (useCache)
+        {
+            HeuristicValuesCache.Add(pattern, heuristicsValues);
+        }
 
         return heuristicsValues;
     }
@@ -37,7 +40,6 @@ public class HeuristicsStatsHelper
     public static int CalculateHeuristicScore(List<Dictionary<char, int>> heuristicValues, string word)
     {
         int score = 0;
-        var uniqueChars = new HashSet<char>();
 
         for (int i = 0; i < word.Length; i++)
         {
@@ -45,10 +47,9 @@ public class HeuristicsStatsHelper
             {
                 score += charScore;
             }
-            uniqueChars.Add(word[i]);
         }
 
-        score *= uniqueChars.Count;
+        score *= word.Distinct().Count();
 
         return score;
     }

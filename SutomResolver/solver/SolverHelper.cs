@@ -1,6 +1,4 @@
-﻿using System.Numerics;
-
-namespace SutomResolver.solver;
+﻿namespace SutomResolver.solver;
 
 internal static class SolverHelper
 {
@@ -39,7 +37,7 @@ internal static class SolverHelper
         string pattern,
         HashSet<char>? misplacedLetters,
         HashSet<char>? absentLetters,
-        List<string>? impossiblePatterns)
+        HashSet<string>? impossiblePatterns)
     {
         // Vérifie la longueur du mot
         int n = word.Length;

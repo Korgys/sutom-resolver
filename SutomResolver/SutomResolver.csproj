@@ -7,8 +7,4 @@
     <Nullable>annotations</Nullable>
   </PropertyGroup>
 
-  <ItemGroup>
-    <Folder Include="solver\v4\" />
-  </ItemGroup>
-
 </Project>

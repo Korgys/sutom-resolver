@@ -11,23 +11,23 @@
 /// </remarks>
 public class Solver : ISolver
 {
-    public List<string> ImpossiblePatterns { get; set; }
+    public HashSet<string> ImpossiblePatterns { get; set; }
     public HashSet<char> AbsentLetters { get; set; }
-    public List<string> RemainingWords { get; set; }
+    public List<string> CandidatesWords { get; set; }
     public List<Dictionary<char, int>> HeuristicValues { get; set; }
 
     public void Initialize(string pattern)
     {
         AbsentLetters = [];
         ImpossiblePatterns = [];
-        RemainingWords = SutomHelper.LoadWordsFromFile(pattern.Length);
-        HeuristicValues = HeuristicsStatsHelper.GetHeuristicValues(RemainingWords, pattern);
+        CandidatesWords = SutomHelper.LoadWordsFromFile(pattern.Length);
+        HeuristicValues = HeuristicsStatsHelper.GetHeuristicValues(CandidatesWords, pattern);
     }
 
     public string GetNextGuess()
     {
         // Détermine le meilleur candidat à partir d'un score basé sur la variété des lettres utilisées et leur score de fréquence
-        var bestMatches = RemainingWords
+        var bestMatches = CandidatesWords
             .Select(word => 
                 new 
                 { 
@@ -46,7 +46,7 @@ public class Solver : ISolver
         var misplacedLetters = SolverHelper.GetMisplacedLetters(guess, result);
         SolverHelper.UpdateAbsentLetters(AbsentLetters, guess, result, misplacedLetters);        
         ImpossiblePatterns.Add(SolverHelper.GetImpossiblePattern(guess, result));
-        RemainingWords = RemainingWords
+        CandidatesWords = CandidatesWords
             .Where(word => word != guess && SolverHelper.MatchesPattern(word, result, misplacedLetters, AbsentLetters, ImpossiblePatterns))
             .ToList();
     }

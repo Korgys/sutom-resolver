@@ -10,17 +10,17 @@
 public class Solver : ISolver
 {
     public HashSet<char> AbsentLetters { get; set; }
-    public List<string> RemainingWords { get; set; }
+    public List<string> CandidatesWords { get; set; }
 
     public void Initialize(string pattern)
     {
         AbsentLetters = [];
-        RemainingWords = SutomHelper.LoadWordsFromFile(pattern.Length);
+        CandidatesWords = SutomHelper.LoadWordsFromFile(pattern.Length);
     }
 
     public string GetNextGuess()
     {
-        return RemainingWords
+        return CandidatesWords
             .MaxBy(SolverHelper.CountDistinctLetters) // Privilégie le mot avec le plus de lettres distinctes
             .ToUpperInvariant();
     }
@@ -29,7 +29,7 @@ public class Solver : ISolver
     {
         var misplacedLetters = SolverHelper.GetMisplacedLetters(guess, result);
         SolverHelper.UpdateAbsentLetters(AbsentLetters, guess, result, misplacedLetters);
-        RemainingWords = RemainingWords
+        CandidatesWords = CandidatesWords
             .Where(word => SolverHelper.MatchesPattern(word, result, misplacedLetters, AbsentLetters, null))
             .ToList();
     }

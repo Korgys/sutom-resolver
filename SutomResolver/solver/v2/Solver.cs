@@ -9,19 +9,19 @@
 public class Solver : ISolver
 {
     private HashSet<char> AbsentLetters { get; set; }
-    private List<string> ImpossiblePatterns { get; set; } // Représente la liste des pattern impossibles pour le mot à trouver
-    public List<string> RemainingWords { get; set; }
+    private HashSet<string> ImpossiblePatterns { get; set; } // Représente la liste des pattern impossibles pour le mot à trouver
+    public List<string> CandidatesWords { get; set; }
 
     public void Initialize(string pattern)
     {
         AbsentLetters = [];
         ImpossiblePatterns = [];
-        RemainingWords = SutomHelper.LoadWordsFromFile(pattern.Length);
+        CandidatesWords = SutomHelper.LoadWordsFromFile(pattern.Length);
     }
 
     public string GetNextGuess()
     {
-        return RemainingWords
+        return CandidatesWords
             .OrderByDescending(word => word.Distinct().Count())
             .FirstOrDefault()?
             .ToUpper();
@@ -32,7 +32,7 @@ public class Solver : ISolver
         var misplacedLetters = SolverHelper.GetMisplacedLetters(guess, result);
         SolverHelper.UpdateAbsentLetters(AbsentLetters, guess, result, misplacedLetters);
         ImpossiblePatterns.Add(SolverHelper.GetImpossiblePattern(guess, result));
-        RemainingWords = RemainingWords
+        CandidatesWords = CandidatesWords
             .Where(word => SolverHelper.MatchesPattern(word, result, misplacedLetters, AbsentLetters, ImpossiblePatterns))
             .ToList();
     }
