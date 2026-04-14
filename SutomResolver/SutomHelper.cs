@@ -66,8 +66,7 @@ public static class SutomHelper
         return new string(result);
     }
 
-
-    public static List<string> LoadWordsFromFile(int size)
+    public static List<string> LoadWordsFromFile(int size, char? firstLetter = null)
     {
         try
         {
@@ -78,7 +77,7 @@ public static class SutomHelper
             }
 
             var words = AllWords
-                .Where(word => word.Length == size)
+                .Where(word => word.Length == size && (firstLetter == null || firstLetter == word[0]))
                 .ToList();
 
             // Ajoute au cache les mots chargés de cette taille

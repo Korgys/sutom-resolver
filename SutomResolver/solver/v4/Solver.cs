@@ -23,7 +23,8 @@ public class Solver : ISolver
     {
         AbsentLetters = [];
         ImpossiblePatterns = [];
-        _allWordsWithSameLength = SutomHelper.LoadWordsFromFile(pattern.Length);
+        char? firstLetter = pattern[0] != '_' ? pattern[0] : null;
+        _allWordsWithSameLength = SutomHelper.LoadWordsFromFile(pattern.Length, firstLetter);
         _remainingTurns = 6;
         _lastResult = "";
         _useDiversifyingWord = false;
