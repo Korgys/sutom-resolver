@@ -1,3 +1,5 @@
+using System.Reflection;
+
 namespace SutomResolver.Tests;
 
 [TestClass]
@@ -104,5 +106,64 @@ public class SimulatorTests
 
         Assert.IsTrue(simulatorV3.Wins >= simulatorV2.Wins,
             $"Expected Solver V3 to have at least as many wins as Solver V2, but got {simulatorV3.Wins} vs {simulatorV2.Wins}");
+    }
+
+    [TestMethod]
+    public void SolverV4_ShouldReturnBestDiversifyingGuess_WhenDiversifyingModeIsEnabled()
+    {
+        var solver = new solver.v4.Solver();
+        solver.Initialize("_____");
+
+        var useDiversifyingWordField = typeof(solver.v4.Solver)
+            .GetField("_useDiversifyingWord", BindingFlags.Instance | BindingFlags.NonPublic);
+        var lastResultField = typeof(solver.v4.Solver)
+            .GetField("_lastResult", BindingFlags.Instance | BindingFlags.NonPublic);
+
+        Assert.IsNotNull(useDiversifyingWordField);
+        Assert.IsNotNull(lastResultField);
+
+        useDiversifyingWordField.SetValue(solver, true);
+        lastResultField.SetValue(solver, "_____");
+
+        var lettersValued = new Dictionary<char, int>();
+        foreach (var candidate in solver.CandidatesWords)
+        {
+            for (int i = 0; i < candidate.Length; i++)
+            {
+                lettersValued[candidate[i]] = lettersValued.TryGetValue(candidate[i], out var value)
+                    ? value + 1
+                    : 2;
+            }
+        }
+
+        var expectedGuess = solver.CandidatesWords
+            .Select(word => new
+            {
+                Word = word,
+                Score = CountDiversifyingScore(word, lettersValued)
+            })
+            .OrderByDescending(x => x.Score)
+            .Select(x => x.Word.ToUpper())
+            .FirstOrDefault();
+
+        var actualGuess = solver.GetNextGuess();
+
+        Assert.AreEqual(expectedGuess, actualGuess);
+    }
+
+    private static double CountDiversifyingScore(string word, Dictionary<char, int> lettersValued)
+    {
+        double score = 1;
+
+        foreach (var letter in word.Distinct())
+        {
+            if (lettersValued.TryGetValue(letter, out int value))
+            {
+                score += value;
+            }
+        }
+
+        score *= word.Distinct().Count();
+        return score;
     }
 }
