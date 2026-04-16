@@ -6,19 +6,16 @@ namespace SutomResolver;
 public static class SutomHelper
 {
     private static readonly string _filePath = "../../../data/fr.txt";
-    private static readonly Dictionary<int, List<string>> _loadWordsCache = new();
+    private static readonly Dictionary<(int Size, char? FirstLetter), List<string>> _loadWordsCache = new();
     private static List<string> _allWords;
     public static List<string> AllWords
     {
         get
         {
-            if (_allWords == null)
-            {
-                _allWords = File.ReadAllLines(_filePath)
+            _allWords ??= File.ReadAllLines(_filePath)
                     .Select(NormalizeString)
                     .Distinct()
                     .ToList();
-            }
             return _allWords;
         }
     }
@@ -70,18 +67,19 @@ public static class SutomHelper
     {
         try
         {
-            // Utilise un cache par taille de mot si disponible
-            if (_loadWordsCache.TryGetValue(size, out var cachedWords))
+            var normalizedFirstLetter = NormalizeFirstLetter(firstLetter);
+            var cacheKey = (Size: size, FirstLetter: normalizedFirstLetter);
+
+            if (_loadWordsCache.TryGetValue(cacheKey, out var cachedWords))
             {
                 return cachedWords;
             }
 
             var words = AllWords
-                .Where(word => word.Length == size && (firstLetter == null || firstLetter == word[0]))
+                .Where(word => word.Length == size && (normalizedFirstLetter == null || normalizedFirstLetter == word[0]))
                 .ToList();
 
-            // Ajoute au cache les mots chargés de cette taille
-            _loadWordsCache[size] = words;
+            _loadWordsCache[cacheKey] = words;
 
             return words;
         }
@@ -90,6 +88,17 @@ public static class SutomHelper
             Console.WriteLine($"Erreur lors de la lecture du fichier : {e.Message}");
             return new();
         }
+    }
+
+    private static char? NormalizeFirstLetter(char? firstLetter)
+    {
+        if (firstLetter == null)
+        {
+            return null;
+        }
+
+        var normalized = NormalizeString(firstLetter.Value.ToString());
+        return normalized.Length > 0 ? normalized[0] : null;
     }
 
     private static string NormalizeString(string input)
