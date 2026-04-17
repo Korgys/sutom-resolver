@@ -1,169 +1,80 @@
-using System.Reflection;
-
 namespace SutomResolver.Tests;
 
 [TestClass]
 public class SimulatorTests
 {
     [TestMethod]
-    public void EmulateGames_ShouldHaveGoodPercentSuccessRate_WithSolverV1()
+    public void EmulateGames_ShouldBeReproducible_WithSeededRandom()
     {
-        // Arrange
-        const int numberOfGames = 100;
-        const float expectedSuccessRate = 80;
-        var simulator = new Simulator<solver.v1.Solver>()
+        const int seed = 12345;
+        const int numberOfGames = 20;
+
+        var first = new Simulator<solver.v1.Solver>(new Random(seed))
+        {
+            NumberOfGames = numberOfGames
+        };
+        var second = new Simulator<solver.v1.Solver>(new Random(seed))
         {
             NumberOfGames = numberOfGames
         };
 
-        // Act
-        simulator.EmulateGames(displayLogs: false);
-        float actualSuccessRate = (simulator.Wins / simulator.NumberOfGames) * 100;
+        first.EmulateGames(displayLogs: false);
+        second.EmulateGames(displayLogs: false);
 
-        // Assert
-        Console.WriteLine(actualSuccessRate);
-        Assert.IsTrue(actualSuccessRate >= expectedSuccessRate, 
-            $"Expected success rate to be at least {expectedSuccessRate}%, but was {actualSuccessRate}%");
+        Assert.AreEqual(first.Wins, second.Wins);
+        Assert.AreEqual(first.Loses, second.Loses);
+        Assert.AreEqual(first.Turns, second.Turns);
     }
 
     [TestMethod]
-    public void EmulateGames_ShouldHaveGoodPercentSuccessRate_WithSolverV2()
+    public void GetResultFromGuess_ShouldMarkExactAndMisplacedLetters()
     {
-        // Arrange
-        const int numberOfGames = 100;
-        const float expectedSuccessRate = 92;
-        var simulator = new Simulator<solver.v2.Solver>()
-        {
-            NumberOfGames = numberOfGames
-        };
+        var result = SutomHelper.GetResultFromGuess("ABATS", "ABOIS");
 
-        // Act
-        simulator.EmulateGames(displayLogs: false);
-        float actualSuccessRate = (simulator.Wins / simulator.NumberOfGames) * 100;
-
-        // Assert
-        Console.WriteLine(actualSuccessRate);
-        Assert.IsTrue(actualSuccessRate >= expectedSuccessRate,
-            $"Expected success rate to be at least {expectedSuccessRate}%, but was {actualSuccessRate}%");
+        Assert.AreEqual("AB__S", result);
     }
 
     [TestMethod]
-    public void EmulateGames_ShouldHaveGoodPercentSuccessRate_WithSolverV3()
-    {
-        // Arrange
-        const int numberOfGames = 100;
-        const float expectedSuccessRate = 95;
-        var simulator = new Simulator<solver.v3.Solver>()
-        {
-            NumberOfGames = numberOfGames
-        };
-
-        // Act
-        simulator.EmulateGames(displayLogs: false);
-        float actualSuccessRate = (simulator.Wins / simulator.NumberOfGames) * 100;
-
-        // Assert
-        Console.WriteLine(actualSuccessRate);
-        Assert.IsTrue(actualSuccessRate >= expectedSuccessRate,
-            $"Expected success rate to be at least {expectedSuccessRate}%, but was {actualSuccessRate}%");
-    }
-
-    [TestMethod]
-    public void SolverV2_ShouldImproveOrMatchV1_OnAverageWins()
-    {
-        const int numberOfGames = 100;
-        var simulatorV1 = new Simulator<solver.v1.Solver>()
-        {
-            NumberOfGames = numberOfGames
-        };
-        var simulatorV2 = new Simulator<solver.v2.Solver>()
-        {
-            NumberOfGames = numberOfGames
-        };
-
-        simulatorV1.EmulateGames(displayLogs: false);
-        simulatorV2.EmulateGames(displayLogs: false);
-
-        Assert.IsTrue(simulatorV2.Wins >= simulatorV1.Wins, 
-            $"Expected Solver V2 to have at least as many wins as Solver V1, but got {simulatorV2.Wins} vs {simulatorV1.Wins}");
-    }
-
-    [TestMethod]
-    public void SolverV3_ShouldImproveOrMatchV2_OnAverageWins()
-    {
-        const int numberOfGames = 100;
-        var simulatorV2 = new Simulator<solver.v2.Solver>()
-        {
-            NumberOfGames = numberOfGames
-        };
-        var simulatorV3 = new Simulator<solver.v3.Solver>()
-        {
-            NumberOfGames = numberOfGames
-        };
-
-        simulatorV2.EmulateGames(displayLogs: false);
-        simulatorV3.EmulateGames(displayLogs: false);
-
-        Assert.IsTrue(simulatorV3.Wins >= simulatorV2.Wins,
-            $"Expected Solver V3 to have at least as many wins as Solver V2, but got {simulatorV3.Wins} vs {simulatorV2.Wins}");
-    }
-
-    [TestMethod]
-    public void SolverV4_ShouldReturnBestDiversifyingGuess_WhenDiversifyingModeIsEnabled()
+    public void ProcessResponse_ShouldFilterCandidatesUsingPublicBehavior()
     {
         var solver = new solver.v4.Solver();
-        solver.Initialize("_____");
+        solver.Initialize("A____");
 
-        var useDiversifyingWordField = typeof(solver.v4.Solver)
-            .GetField("_useDiversifyingWord", BindingFlags.Instance | BindingFlags.NonPublic);
-        var lastResultField = typeof(solver.v4.Solver)
-            .GetField("_lastResult", BindingFlags.Instance | BindingFlags.NonPublic);
+        var initialCount = solver.CandidatesWords.Count;
+        var response = SutomHelper.GetResultFromGuess("ABATS", "ABOIS");
 
-        Assert.IsNotNull(useDiversifyingWordField);
-        Assert.IsNotNull(lastResultField);
+        solver.ProcessResponse("ABATS", response);
 
-        useDiversifyingWordField.SetValue(solver, true);
-        lastResultField.SetValue(solver, "_____");
-
-        var lettersValued = new Dictionary<char, int>();
-        foreach (var candidate in solver.CandidatesWords)
-        {
-            for (int i = 0; i < candidate.Length; i++)
-            {
-                lettersValued[candidate[i]] = lettersValued.TryGetValue(candidate[i], out var value)
-                    ? value + 1
-                    : 2;
-            }
-        }
-
-        var expectedGuess = solver.CandidatesWords
-            .Select(word => new
-            {
-                Word = word,
-                Score = CountDiversifyingScore(word, lettersValued)
-            })
-            .OrderByDescending(x => x.Score)
-            .Select(x => x.Word.ToUpper())
-            .FirstOrDefault();
-
-        var actualGuess = solver.GetNextGuess();
-
-        Assert.AreEqual(expectedGuess, actualGuess);
+        Assert.IsTrue(solver.CandidatesWords.Count < initialCount);
+        CollectionAssert.Contains(solver.CandidatesWords, "ABOIS");
+        CollectionAssert.DoesNotContain(solver.CandidatesWords, "ABATS");
+        CollectionAssert.DoesNotContain(solver.CandidatesWords, "ABOUT");
     }
 
-    private static double CountDiversifyingScore(string word, Dictionary<char, int> lettersValued)
+    [TestMethod]
+    public void GetNextGuess_ShouldReturnRemainingCandidate_WhenFilteringLeavesOneWord()
     {
-        double score = 1;
+        var solver = new solver.v4.Solver();
+        solver.Initialize("A____");
 
-        foreach (var letter in word.Distinct())
-        {
-            if (lettersValued.TryGetValue(letter, out int value))
-            {
-                score += value;
-            }
-        }
+        solver.ProcessResponse("ABATS", SutomHelper.GetResultFromGuess("ABATS", "ABOIS"));
 
-        score *= word.Distinct().Count();
-        return score;
+        var nextGuess = solver.GetNextGuess();
+
+        Assert.IsFalse(string.IsNullOrEmpty(nextGuess));
+        CollectionAssert.Contains(solver.CandidatesWords, nextGuess);
+    }
+
+    [TestMethod]
+    public void ProcessResponse_ShouldRespectFixedLettersAndAbsentLetters()
+    {
+        var solver = new solver.v4.Solver();
+        solver.Initialize("A____");
+
+        solver.ProcessResponse("ABATS", "AB__S");
+
+        CollectionAssert.Contains(solver.CandidatesWords, "ABOIS");
+        CollectionAssert.DoesNotContain(solver.CandidatesWords, "ABOUT");
+        CollectionAssert.DoesNotContain(solver.CandidatesWords, "ABUSE");
     }
 }

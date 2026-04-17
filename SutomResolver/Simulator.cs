@@ -7,6 +7,13 @@ namespace SutomResolver;
 
 public class Simulator<T> where T : ISolver, new()
 {
+    private readonly Random _random;
+
+    public Simulator(Random? random = null)
+    {
+        _random = random ?? new Random();
+    }
+
     public T Solver { get; set; } = new T(); // Stratégie IA utilisée pour résoudre le mot
     public int NumberOfGames { get; set; } = 10000;
     public float Turns { get; set; } = 0;
@@ -17,13 +24,12 @@ public class Simulator<T> where T : ISolver, new()
     public void EmulateGames(bool displayLogs = true)
     {
         var watch = Stopwatch.StartNew();
-        Random random = new Random();
         int turns;
 
         for (int i = 1; i <= NumberOfGames; i++)
         {
             // Mot à deviner
-            var targetWord = NormalizeString(SutomHelper.AllWords[random.Next(SutomHelper.AllWords.Count)].ToUpper());
+            var targetWord = NormalizeString(SutomHelper.AllWords[_random.Next(SutomHelper.AllWords.Count)].ToUpper());
             Console.WriteLine($"{i}) Mot à deviner : {targetWord}");
 
             // Exemple ____ pour LAIT
