@@ -8,6 +8,7 @@
 /// </remarks>
 public class Solver : ISolver
 {
+    private SutomConstraints _constraints = SutomConstraints.CreateEmpty(0);
     private HashSet<char> AbsentLetters { get; set; }
     private HashSet<string> ImpossiblePatterns { get; set; } // Représente la liste des pattern impossibles pour le mot à trouver
     public List<string> CandidatesWords { get; set; }
@@ -17,6 +18,7 @@ public class Solver : ISolver
         AbsentLetters = [];
         ImpossiblePatterns = [];
         CandidatesWords = SutomHelper.LoadWordsFromFile(pattern.Length);
+        _constraints = SutomConstraints.CreateEmpty(pattern.Length);
     }
 
     public string GetNextGuess()
@@ -32,8 +34,9 @@ public class Solver : ISolver
         var misplacedLetters = SolverHelper.GetMisplacedLetters(guess, result);
         SolverHelper.UpdateAbsentLetters(AbsentLetters, guess, result, misplacedLetters);
         ImpossiblePatterns.Add(SolverHelper.GetImpossiblePattern(guess, result));
+        _constraints = _constraints.Merge(SutomConstraints.FromGuessAndResult(guess, result));
         CandidatesWords = CandidatesWords
-            .Where(word => SolverHelper.MatchesPattern(word, result, misplacedLetters, AbsentLetters, ImpossiblePatterns))
+            .Where(word => word != guess && _constraints.Matches(word))
             .ToList();
     }
 }

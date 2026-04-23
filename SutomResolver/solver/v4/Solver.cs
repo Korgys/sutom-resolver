@@ -13,6 +13,7 @@ public class Solver : ISolver
     private int _remainingTurns = 6;
     private bool _useDiversifyingWord = false;
     private string _lastResult = "";
+    private SutomConstraints _constraints = SutomConstraints.CreateEmpty(0);
 
     public HashSet<string> ImpossiblePatterns { get; set; }
     public HashSet<char> AbsentLetters { get; set; }
@@ -28,6 +29,7 @@ public class Solver : ISolver
         _remainingTurns = 6;
         _lastResult = "";
         _useDiversifyingWord = false;
+        _constraints = SutomConstraints.CreateEmpty(pattern.Length);
         CandidatesWords = new List<string> (_allWordsWithSameLength);
         HeuristicValues = HeuristicsStatsHelper.GetHeuristicValues(CandidatesWords, pattern);
     }
@@ -87,10 +89,11 @@ public class Solver : ISolver
         var misplacedLetters = SolverHelper.GetMisplacedLetters(guess, result);
         SolverHelper.UpdateAbsentLetters(AbsentLetters, guess, result, misplacedLetters);        
         ImpossiblePatterns.Add(SolverHelper.GetImpossiblePattern(guess, result));
+        _constraints = _constraints.Merge(SutomConstraints.FromGuessAndResult(guess, result));
 
         string resultToUseForFilter = _useDiversifyingWord ? _lastResult : result;
         CandidatesWords = CandidatesWords
-            .Where(word => word != guess && SolverHelper.MatchesPattern(word, resultToUseForFilter, misplacedLetters, AbsentLetters, ImpossiblePatterns))
+            .Where(word => word != guess && _constraints.Matches(word))
             .ToList();
         HeuristicValues = HeuristicsStatsHelper.GetHeuristicValues(CandidatesWords, resultToUseForFilter, false);
 

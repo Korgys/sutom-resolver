@@ -35,6 +35,14 @@ public class SimulatorTests
     }
 
     [TestMethod]
+    public void GetResultFromGuess_ShouldUseTwoPassMatchingForRepeatedLetters()
+    {
+        var result = SutomHelper.GetResultFromGuess("AABBB", "AACCC");
+
+        Assert.AreEqual("AA___", result);
+    }
+
+    [TestMethod]
     public void ProcessResponse_ShouldFilterCandidatesUsingPublicBehavior()
     {
         var solver = new solver.v4.Solver();
