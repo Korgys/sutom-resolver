@@ -1,10 +1,12 @@
 ﻿using System.Globalization;
 using System.Text;
+using System.Linq;
 
 namespace SutomResolver;
 
 public static class SutomHelper
 {
+    private const string WordListFileName = "fr.txt";
     private static readonly string _filePath = ResolveWordListPath();
     private static readonly Dictionary<(int Size, char? FirstLetter), List<string>> _loadWordsCache = new();
     private static List<string> _allWords;
@@ -124,7 +126,7 @@ public static class SutomHelper
 
         while (directory is not null)
         {
-            var directCandidate = Path.Combine(directory.FullName, "data", "fr.txt");
+            var directCandidate = Path.Combine(directory.FullName, "data", WordListFileName);
             if (File.Exists(directCandidate))
             {
                 return directCandidate;
@@ -135,24 +137,20 @@ public static class SutomHelper
             {
                 var projectCandidates = new[]
                 {
-                    Path.Combine(directory.FullName, "SutomResolver", "data", "fr.txt"),
-                    Path.Combine(directory.FullName, "SutomResolver.Tests", "data", "fr.txt"),
-                    Path.Combine(directory.FullName, "SutomResolver.Cli", "data", "fr.txt"),
-                    Path.Combine(directory.FullName, "SutomResolver.Core", "data", "fr.txt")
+                    Path.Combine(directory.FullName, "SutomResolver", "data", WordListFileName),
+                    Path.Combine(directory.FullName, "SutomResolver.Tests", "data", WordListFileName),
+                    Path.Combine(directory.FullName, "SutomResolver.Cli", "data", WordListFileName),
+                    Path.Combine(directory.FullName, "SutomResolver.Core", "data", WordListFileName)
                 };
 
-                foreach (var candidate in projectCandidates)
-                {
-                    if (File.Exists(candidate))
-                    {
-                        return candidate;
-                    }
-                }
+                var candidate = projectCandidates.FirstOrDefault(c => File.Exists(c));
+                if (candidate != null)
+                    return candidate;
             }
 
             directory = directory.Parent;
         }
 
-        throw new FileNotFoundException("Unable to locate data/fr.txt from the application base directory.", "fr.txt");
+        throw new FileNotFoundException("Unable to locate data/fr.txt from the application base directory.", WordListFileName);
     }
 }

@@ -14,32 +14,36 @@ public class HeuristicsStatsHelper
 
     public static List<Dictionary<char, int>> GetHeuristicValues(List<string> words, string pattern, bool useCache = true)
     {
+        var patternLength = pattern.Length;
         var cacheKey = useCache ? BuildCacheKey(pattern, words) : string.Empty;
+
+        if (useCache && TryGetCachedHeuristicValues(cacheKey, out var cachedValues))
+        {
+            return cachedValues;
+        }
+
+        var heuristicsValues = CreateHeuristicValues(words, patternLength);
 
         if (useCache)
         {
-            lock (HeuristicValuesCacheLock)
-            {
-                if (HeuristicValuesCache.TryGetValue(cacheKey, out var cachedNode))
-                {
-                    HeuristicValuesCacheLru.Remove(cachedNode);
-                    HeuristicValuesCacheLru.AddFirst(cachedNode);
-                    return cachedNode.Value.Values;
-                }
-            }
+            CacheHeuristicValues(cacheKey, heuristicsValues);
         }
 
-        var heuristicsValues = new List<Dictionary<char, int>>();
+        return heuristicsValues;
+    }
 
-        for (int i = 0; i < pattern.Length; i++)
+    private static List<Dictionary<char, int>> CreateHeuristicValues(List<string> words, int patternLength)
+    {
+        var heuristicsValues = new List<Dictionary<char, int>>(patternLength);
+
+        for (int i = 0; i < patternLength; i++)
         {
-            var heuristicValues = new Dictionary<char, int>();
-            heuristicsValues.Add(heuristicValues);
+            heuristicsValues.Add([]);
         }
 
         foreach (var word in words)
         {
-            for (int i = 0; i < pattern.Length; i++)
+            for (int i = 0; i < patternLength; i++)
             {
                 var heuristicValues = heuristicsValues[i];
                 if (!heuristicValues.TryGetValue(word[i], out var count))
@@ -53,37 +57,53 @@ public class HeuristicsStatsHelper
             }
         }
 
-        if (useCache)
+        return heuristicsValues;
+    }
+
+    private static bool TryGetCachedHeuristicValues(string cacheKey, out List<Dictionary<char, int>> cachedValues)
+    {
+        lock (HeuristicValuesCacheLock)
         {
-            var cacheEntry = new HeuristicValuesCacheEntry(cacheKey, heuristicsValues);
-
-            lock (HeuristicValuesCacheLock)
+            if (!HeuristicValuesCache.TryGetValue(cacheKey, out var cachedNode))
             {
-                if (HeuristicValuesCache.TryGetValue(cacheKey, out var existingNode))
+                cachedValues = [];
+                return false;
+            }
+
+            HeuristicValuesCacheLru.Remove(cachedNode);
+            HeuristicValuesCacheLru.AddFirst(cachedNode);
+            cachedValues = cachedNode.Value.Values;
+            return true;
+        }
+    }
+
+    private static void CacheHeuristicValues(string cacheKey, List<Dictionary<char, int>> heuristicsValues)
+    {
+        lock (HeuristicValuesCacheLock)
+        {
+            if (HeuristicValuesCache.TryGetValue(cacheKey, out var existingNode))
+            {
+                HeuristicValuesCacheLru.Remove(existingNode);
+                HeuristicValuesCache.Remove(cacheKey);
+            }
+
+            var cacheEntry = new HeuristicValuesCacheEntry(cacheKey, heuristicsValues);
+            var node = new LinkedListNode<HeuristicValuesCacheEntry>(cacheEntry);
+            HeuristicValuesCacheLru.AddFirst(node);
+            HeuristicValuesCache.Add(cacheKey, node);
+
+            while (HeuristicValuesCache.Count > HeuristicValuesCacheMaxEntries)
+            {
+                var lruNode = HeuristicValuesCacheLru.Last;
+                if (lruNode is null)
                 {
-                    HeuristicValuesCacheLru.Remove(existingNode);
-                    HeuristicValuesCache.Remove(cacheKey);
+                    break;
                 }
 
-                var node = new LinkedListNode<HeuristicValuesCacheEntry>(cacheEntry);
-                HeuristicValuesCacheLru.AddFirst(node);
-                HeuristicValuesCache.Add(cacheKey, node);
-
-                while (HeuristicValuesCache.Count > HeuristicValuesCacheMaxEntries)
-                {
-                    var lruNode = HeuristicValuesCacheLru.Last;
-                    if (lruNode is null)
-                    {
-                        break;
-                    }
-
-                    HeuristicValuesCacheLru.RemoveLast();
-                    HeuristicValuesCache.Remove(lruNode.Value.Key);
-                }
+                HeuristicValuesCacheLru.RemoveLast();
+                HeuristicValuesCache.Remove(lruNode.Value.Key);
             }
         }
-
-        return heuristicsValues;
     }
 
     private static string BuildCacheKey(string pattern, List<string> words)

@@ -128,7 +128,7 @@ public class SolverCoverageTests
         var exception = Assert.ThrowsException<TargetInvocationException>(() =>
             mergeResults.Invoke(solver, new object[] { "ABC", "ABCD" }));
 
-        Assert.IsInstanceOfType(exception.InnerException, typeof(ArgumentException));
+        Assert.IsInstanceOfType<ArgumentException>(exception.InnerException);
     }
 
     [TestMethod]
