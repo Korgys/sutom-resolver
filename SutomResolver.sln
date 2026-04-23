@@ -8,7 +8,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.editorconfig = .editorconfig
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SutomResolver", "SutomResolver\SutomResolver.csproj", "{5221C856-3E78-D3C0-D3A8-8447579EC68B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SutomResolver.Core", "SutomResolver\SutomResolver.Core.csproj", "{2451E862-C4D3-4C7E-B654-5DB63866F00B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SutomResolver.Cli", "SutomResolver.Cli\SutomResolver.Cli.csproj", "{0BD32FFC-FFAD-4ECF-A185-E2DAC69C7BC6}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SutomResolver.Tests", "SutomResolver.Tests\SutomResolver.Tests.csproj", "{A4E8B019-9660-0906-FE03-68F0654FCBB1}"
 EndProject
@@ -18,10 +20,14 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{5221C856-3E78-D3C0-D3A8-8447579EC68B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{5221C856-3E78-D3C0-D3A8-8447579EC68B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{5221C856-3E78-D3C0-D3A8-8447579EC68B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{5221C856-3E78-D3C0-D3A8-8447579EC68B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2451E862-C4D3-4C7E-B654-5DB63866F00B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2451E862-C4D3-4C7E-B654-5DB63866F00B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2451E862-C4D3-4C7E-B654-5DB63866F00B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2451E862-C4D3-4C7E-B654-5DB63866F00B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0BD32FFC-FFAD-4ECF-A185-E2DAC69C7BC6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0BD32FFC-FFAD-4ECF-A185-E2DAC69C7BC6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0BD32FFC-FFAD-4ECF-A185-E2DAC69C7BC6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0BD32FFC-FFAD-4ECF-A185-E2DAC69C7BC6}.Release|Any CPU.Build.0 = Release|Any CPU
 		{A4E8B019-9660-0906-FE03-68F0654FCBB1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{A4E8B019-9660-0906-FE03-68F0654FCBB1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A4E8B019-9660-0906-FE03-68F0654FCBB1}.Release|Any CPU.ActiveCfg = Release|Any CPU

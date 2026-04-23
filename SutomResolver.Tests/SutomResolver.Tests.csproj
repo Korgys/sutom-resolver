@@ -17,7 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\SutomResolver\SutomResolver.csproj" />
+    <ProjectReference Include="..\SutomResolver\SutomResolver.Core.csproj" />
   </ItemGroup>
 
 </Project>

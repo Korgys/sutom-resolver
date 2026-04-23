@@ -5,7 +5,7 @@ namespace SutomResolver;
 
 public static class SutomHelper
 {
-    private static readonly string _filePath = "../../../data/fr.txt";
+    private static readonly string _filePath = ResolveWordListPath();
     private static readonly Dictionary<(int Size, char? FirstLetter), List<string>> _loadWordsCache = new();
     private static List<string> _allWords;
     public static List<string> AllWords
@@ -116,5 +116,43 @@ public static class SutomHelper
         }
 
         return stringBuilder.ToString().Normalize(NormalizationForm.FormC).ToUpper();
+    }
+
+    private static string ResolveWordListPath()
+    {
+        var directory = new DirectoryInfo(AppContext.BaseDirectory);
+
+        while (directory is not null)
+        {
+            var directCandidate = Path.Combine(directory.FullName, "data", "fr.txt");
+            if (File.Exists(directCandidate))
+            {
+                return directCandidate;
+            }
+
+            var solutionRoot = Path.Combine(directory.FullName, "SutomResolver.sln");
+            if (File.Exists(solutionRoot))
+            {
+                var projectCandidates = new[]
+                {
+                    Path.Combine(directory.FullName, "SutomResolver", "data", "fr.txt"),
+                    Path.Combine(directory.FullName, "SutomResolver.Tests", "data", "fr.txt"),
+                    Path.Combine(directory.FullName, "SutomResolver.Cli", "data", "fr.txt"),
+                    Path.Combine(directory.FullName, "SutomResolver.Core", "data", "fr.txt")
+                };
+
+                foreach (var candidate in projectCandidates)
+                {
+                    if (File.Exists(candidate))
+                    {
+                        return candidate;
+                    }
+                }
+            }
+
+            directory = directory.Parent;
+        }
+
+        throw new FileNotFoundException("Unable to locate data/fr.txt from the application base directory.", "fr.txt");
     }
 }
