@@ -38,6 +38,28 @@ public class SolverCoverageTests
     }
 
     [TestMethod]
+    public void V2Solver_ProcessResponse_ShouldLimitDuplicateLetters_WhenOnlyOneOccurrenceIsValidated()
+    {
+        var solver = new SutomResolver.solver.v2.Solver();
+        solver.Initialize("_____");
+        solver.CandidatesWords = new List<string>
+        {
+            "BACDE",
+            "BAADE",
+            "AACDE",
+            "ZZZZZ"
+        };
+
+        var result = SutomHelper.GetResultFromGuess("AAFGH", "BACDE");
+        solver.ProcessResponse("AAFGH", result);
+
+        CollectionAssert.Contains(solver.CandidatesWords, "BACDE");
+        CollectionAssert.DoesNotContain(solver.CandidatesWords, "BAADE");
+        CollectionAssert.DoesNotContain(solver.CandidatesWords, "AACDE");
+        CollectionAssert.DoesNotContain(solver.CandidatesWords, "ZZZZZ");
+    }
+
+    [TestMethod]
     public void V3Solver_GetNextGuess_ShouldUseHeuristicScores()
     {
         var solver = new SutomResolver.solver.v3.Solver();

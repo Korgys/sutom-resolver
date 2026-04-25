@@ -35,70 +35,36 @@ internal static class SolverHelper
     internal static bool MatchesPattern(
         string word,
         string pattern,
-        HashSet<char>? misplacedLetters,
-        HashSet<char>? absentLetters,
-        HashSet<string>? impossiblePatterns)
+        IEnumerable<(string Guess, string Result)>? guessResultPairs)
     {
-        // Vérifie la longueur du mot
-        int n = word.Length;
-        if (pattern.Length != n) return false;
-
-        // Le mot doit contenir TOUTES les lettres "mal placées"
-        if (misplacedLetters is { Count: > 0 })
+        if (pattern.Length != word.Length)
         {
-            foreach (var c in misplacedLetters)
+            return false;
+        }
+
+        var constraints = SutomConstraints.CreateEmpty(word.Length);
+
+        if (guessResultPairs is not null)
+        {
+            foreach (var (guess, result) in guessResultPairs)
             {
-                if (word.IndexOf(c) < 0) return false;
+                constraints = constraints.Merge(SutomConstraints.FromGuessAndResult(guess, result));
             }
         }
 
-        // Lettres interdites par position (à partir des "impossiblePatterns")
-        HashSet<char>[]? forbidden = null;
-        if (impossiblePatterns is { Count: > 0 })
+        if (!constraints.Matches(word))
         {
-            forbidden = new HashSet<char>[n];
-            for (int i = 0; i < n; i++) forbidden[i] = new HashSet<char>();
-
-            foreach (var ip in impossiblePatterns)
-            {
-                if (string.IsNullOrEmpty(ip)) continue;
-                int m = Math.Min(ip.Length, n);
-                for (int i = 0; i < m; i++)
-                {
-                    char f = ip[i];
-                    // On n'ajoute que de vraies lettres interdites (pas '_', '?', '+')
-                    if (f != '_' && f != '?' && f != '+') forbidden[i].Add(f);
-                }
-            }
+            return false;
         }
 
-        // Vérif positionnelle
-        for (int i = 0; i < n; i++)
+        // Compatibilité avec le pattern historique: toute lettre explicite est fixe.
+        for (int i = 0; i < pattern.Length; i++)
         {
-            char p = pattern[i];
-            char c = word[i];
-
-            // Si le pattern fixe une lettre explicite à cette position, elle doit matcher
-            if (p != '_' && p != '?' && p != '+')
+            var patternChar = pattern[i];
+            if (patternChar != '_' && patternChar != '?' && patternChar != '+' && word[i] != patternChar)
             {
-                if (c != p) return false;
-                if (forbidden is not null && forbidden[i].Contains(c)) return false;
-                continue;
+                return false;
             }
-
-            // Dans tous les cas, ne pas violer une interdiction explicite à cette position
-            if (forbidden is not null && forbidden[i].Contains(c)) return false;
-
-            if (p == '+')
-            {
-                // '+' = lettre présente dans le mot mais pas à cette position.
-                // La présence globale a déjà été vérifiée au pré-check.
-                // Le "pas à cette position" est géré par forbidden[] construit depuis les patterns impossibles.
-                continue;
-            }
-
-            // '_' ou '?' : cette lettre ne doit pas faire partie des "absentes"
-            if (absentLetters is not null && absentLetters.Contains(c)) return false;
         }
 
         return true;

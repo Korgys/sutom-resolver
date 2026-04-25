@@ -38,4 +38,22 @@ public class SutomConstraintsTests
         Assert.IsTrue(constraints.Matches("ABDDD"));
         Assert.IsFalse(constraints.Matches("ABAAA"));
     }
+
+    [TestMethod]
+    public void FromGuessAndResult_ShouldCapLetterCount_WhenGuessContainsDuplicatesButTargetContainsOne()
+    {
+        var result = SutomHelper.GetResultFromGuess("AAFGH", "BACDE");
+
+        var constraints = SutomResolver.solver.SutomConstraints.FromGuessAndResult("AAFGH", result);
+
+        Assert.IsTrue(constraints.TryGetLetterConstraint('A', out var aConstraint));
+        Assert.AreEqual(1, aConstraint.Minimum);
+        Assert.AreEqual(1, aConstraint.Maximum);
+
+        Assert.IsTrue(constraints.IsLetterForbiddenAt(0, 'A'));
+        Assert.AreEqual('A', constraints.GetFixedLetter(1));
+
+        Assert.IsTrue(constraints.Matches("BACDE"));
+        Assert.IsFalse(constraints.Matches("BAADE"));
+    }
 }
