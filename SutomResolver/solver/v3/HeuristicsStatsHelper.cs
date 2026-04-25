@@ -1,3 +1,4 @@
+using System.Buffers.Binary;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -108,9 +109,25 @@ public class HeuristicsStatsHelper
 
     private static string BuildCacheKey(string pattern, List<string> words)
     {
-        var wordsFingerprint = string.Join('\u001F', words);
-        var hash = SHA256.HashData(Encoding.UTF8.GetBytes(wordsFingerprint));
+        var hash = BuildOrderedWordsFingerprint(words);
         return $"{pattern.Length}:{pattern}:{words.Count}:{Convert.ToHexString(hash)}";
+    }
+
+    private static byte[] BuildOrderedWordsFingerprint(List<string> words)
+    {
+        using var hash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
+
+        foreach (var word in words)
+        {
+            Span<byte> wordLengthBytes = stackalloc byte[sizeof(int)];
+            BinaryPrimitives.WriteInt32LittleEndian(wordLengthBytes, word.Length);
+            hash.AppendData(wordLengthBytes);
+
+            var encodedWord = Encoding.UTF8.GetBytes(word);
+            hash.AppendData(encodedWord);
+        }
+
+        return hash.GetHashAndReset();
     }
 
     public static int CalculateHeuristicScore(List<Dictionary<char, int>> heuristicValues, string word)

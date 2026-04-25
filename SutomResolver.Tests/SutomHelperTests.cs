@@ -4,20 +4,19 @@ namespace SutomResolver.Tests;
 public class SutomHelperTests
 {
     [TestMethod]
-    public void V4SolverHeuristicValues_ShouldDiffer_ForSamePatternAndDifferentWordLists()
+    public void GetHeuristicValues_ShouldReturnDifferentDistributions_ForSamePatternAndDifferentWordLists()
     {
         // Arrange
         var pattern = "abcde";
-        var solver = new SutomResolver.solver.v4.Solver();
+        var firstWords = new List<string> { "abcde", "axcye" };
+        var secondWords = new List<string> { "bbcde", "bbcee" };
 
         // Act
-        var firstHeuristics = SutomResolver.solver.v3.HeuristicsStatsHelper.GetHeuristicValues(
-            new List<string> { "abcde", "axcye" },
-            pattern);
+        var firstHeuristics = SutomResolver.solver.v3.HeuristicsStatsHelper.GetHeuristicValues(firstWords, pattern);
+        var secondHeuristics = SutomResolver.solver.v3.HeuristicsStatsHelper.GetHeuristicValues(secondWords, pattern);
 
-        var secondHeuristics = SutomResolver.solver.v3.HeuristicsStatsHelper.GetHeuristicValues(
-            new List<string> { "bbcde", "bbcee" },
-            pattern);
+        var firstScore = SutomResolver.solver.v3.HeuristicsStatsHelper.CalculateHeuristicScore(firstHeuristics, "abcde");
+        var secondScore = SutomResolver.solver.v3.HeuristicsStatsHelper.CalculateHeuristicScore(secondHeuristics, "abcde");
 
         // Assert
         Assert.AreNotEqual(
@@ -26,6 +25,7 @@ public class SutomHelperTests
         Assert.AreNotEqual(
             firstHeuristics[0].TryGetValue('b', out var firstB) ? firstB : 0,
             secondHeuristics[0].TryGetValue('b', out var secondB) ? secondB : 0);
+        Assert.AreNotEqual(firstScore, secondScore);
     }
 
     [TestMethod]
