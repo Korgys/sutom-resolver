@@ -8,10 +8,12 @@ namespace SutomResolver;
 public class Simulator<T> where T : ISolver, new()
 {
     private readonly Random _random;
+    private readonly IReadOnlyList<string> _wordCorpus;
 
-    public Simulator(Random? random = null)
+    public Simulator(Random? random = null, IReadOnlyList<string>? wordCorpus = null)
     {
         _random = random ?? new Random();
+        _wordCorpus = wordCorpus ?? SutomHelper.AllWords;
     }
 
     public T Solver { get; set; } = new T(); // Stratégie IA utilisée pour résoudre le mot
@@ -23,13 +25,18 @@ public class Simulator<T> where T : ISolver, new()
     
     public void EmulateGames(bool displayLogs = true)
     {
+        if (_wordCorpus.Count == 0)
+        {
+            throw new InvalidOperationException("Word corpus cannot be empty.");
+        }
+
         var watch = Stopwatch.StartNew();
         int turns;
 
         for (int i = 1; i <= NumberOfGames; i++)
         {
             // Mot à deviner
-            var targetWord = NormalizeString(SutomHelper.AllWords[_random.Next(SutomHelper.AllWords.Count)].ToUpper());
+            var targetWord = NormalizeString(_wordCorpus[_random.Next(_wordCorpus.Count)].ToUpper());
             Console.WriteLine($"{i}) Mot à deviner : {targetWord}");
 
             // Exemple ____ pour LAIT
