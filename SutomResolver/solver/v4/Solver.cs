@@ -24,13 +24,12 @@ public class Solver : ISolver
     {
         AbsentLetters = [];
         ImpossiblePatterns = [];
-        char? firstLetter = pattern[0] != '_' ? pattern[0] : null;
-        _allWordsWithSameLength = SutomHelper.LoadWordsFromFile(pattern.Length, firstLetter);
+        _allWordsWithSameLength = SolverHelper.LoadCandidatesMatchingPattern(pattern);
         _remainingTurns = 6;
         _lastResult = "";
         _useDiversifyingWord = false;
         _constraints = SutomConstraints.CreateEmpty(pattern.Length);
-        CandidatesWords = new List<string> (_allWordsWithSameLength);
+        CandidatesWords = new List<string>(_allWordsWithSameLength);
         HeuristicValues = HeuristicsStatsHelper.GetHeuristicValues(CandidatesWords, pattern);
     }
 
@@ -52,32 +51,16 @@ public class Solver : ISolver
                 }
             }
 
-            var bestMatch = _allWordsWithSameLength
-                .Select(word =>
-                    new
-                    {
-                        Word = word,
-                        Score = CountValuedLetters(word, lettersValued)
-                    })
-                .OrderByDescending(w => w.Score)
-                .Select(w => w.Word)
-                .FirstOrDefault()?.ToUpper();
-            return bestMatch;
+            return _allWordsWithSameLength
+                .MaxBy(word => CountValuedLetters(word, lettersValued))?
+                .ToUpperInvariant() ?? string.Empty;
         }
         else // Soit on utilise l'heuristique statistique
         {
             // Détermine le meilleur candidat à partir d'un score basé sur la variété des lettres utilisées et leur score de fréquence
-            var bestMatches = CandidatesWords
-                .Select(word =>
-                    new
-                    {
-                        Word = word,
-                        Score = HeuristicsStatsHelper.CalculateHeuristicScore(HeuristicValues, word)
-                    })
-                .OrderByDescending(w => w.Score)
-                .Select(w => w.Word)
-                .FirstOrDefault()?.ToUpper();
-            return bestMatches;
+            return CandidatesWords
+                .MaxBy(word => HeuristicsStatsHelper.CalculateHeuristicScore(HeuristicValues, word))?
+                .ToUpperInvariant() ?? string.Empty;
         }
     }
 
@@ -115,7 +98,8 @@ public class Solver : ISolver
     private double CountValuedLetters(string word, Dictionary<char, int> lettersValued)
     {
         double score = 1;
-        foreach (var letter in word.Distinct())
+        var distinctLetters = word.Distinct().ToArray();
+        foreach (var letter in distinctLetters)
         {
             if (lettersValued.TryGetValue(letter, out int value))
             {
@@ -127,7 +111,7 @@ public class Solver : ISolver
             }
         }
 
-        score *= word.Distinct().Count();
+        score *= distinctLetters.Length;
 
         if (_lastResult.Any(char.IsLetter))
         {
@@ -152,11 +136,11 @@ public class Solver : ISolver
         var merged = new char[result1.Length];
         for (int i = 0; i < result1.Length; i++)
         {
-            if (result1[i] != '_' && result1[i] != '+')
+            if (IsFixedResult(result1[i]))
             {
                 merged[i] = result1[i];
             }
-            else if (result2[i] != '_' && result2[i] != '+')
+            else if (IsFixedResult(result2[i]))
             {
                 merged[i] = result2[i];
             }
@@ -171,4 +155,6 @@ public class Solver : ISolver
         }
         return new string(merged);
     }
+
+    private static bool IsFixedResult(char resultChar) => resultChar is not ('_' or '?' or '+');
 }

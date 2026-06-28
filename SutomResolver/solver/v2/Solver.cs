@@ -17,16 +17,15 @@ public class Solver : ISolver
     {
         AbsentLetters = [];
         ImpossiblePatterns = [];
-        CandidatesWords = SutomHelper.LoadWordsFromFile(pattern.Length);
+        CandidatesWords = SolverHelper.LoadCandidatesMatchingPattern(pattern);
         _constraints = SutomConstraints.CreateEmpty(pattern.Length);
     }
 
     public string GetNextGuess()
     {
         return CandidatesWords
-            .OrderByDescending(word => word.Distinct().Count())
-            .FirstOrDefault()?
-            .ToUpper();
+            .MaxBy(SolverHelper.CountDistinctLetters)?
+            .ToUpperInvariant() ?? string.Empty;
     }
 
     public void ProcessResponse(string guess, string result)

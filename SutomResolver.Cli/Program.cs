@@ -8,8 +8,13 @@ public static class Program
     {
         var solver = new Solver();
 
-        Console.Write("Entrez le pattern du mot à trouver (ex: L___) : ");
-        var pattern = Console.ReadLine();
+        var pattern = ReadInput("Entrez le pattern du mot à trouver (ex: L___) : ");
+        if (pattern is null)
+        {
+            Console.WriteLine("Pattern vide.");
+            return;
+        }
+
         solver.Initialize(pattern);
         var displayRules = true;
 
@@ -39,8 +44,18 @@ public static class Program
                 displayRules = false;
             }
 
-            Console.Write("Entrez le pattern du mot à trouver : ");
-            var result = Console.ReadLine();
+            var result = ReadInput("Entrez le pattern du mot à trouver : ");
+            if (result is null)
+            {
+                Console.WriteLine("Réponse vide ignorée.");
+                continue;
+            }
+
+            if (result.Length != guess.Length)
+            {
+                Console.WriteLine($"Réponse invalide ({guess.Length} caractères attendus).");
+                continue;
+            }
 
             if (guess == result)
             {
@@ -50,5 +65,12 @@ public static class Program
 
             solver.ProcessResponse(guess, result);
         }
+    }
+
+    private static string? ReadInput(string prompt)
+    {
+        Console.Write(prompt);
+        var input = Console.ReadLine()?.Trim().ToUpperInvariant();
+        return string.IsNullOrWhiteSpace(input) ? null : input;
     }
 }

@@ -16,7 +16,7 @@ public class Solver : ISolver
     public void Initialize(string pattern)
     {
         AbsentLetters = [];
-        CandidatesWords = SutomHelper.LoadWordsFromFile(pattern.Length);
+        CandidatesWords = SolverHelper.LoadCandidatesMatchingPattern(pattern);
         _constraints = SutomConstraints.CreateEmpty(pattern.Length);
     }
 
@@ -24,7 +24,7 @@ public class Solver : ISolver
     {
         return CandidatesWords
             .MaxBy(SolverHelper.CountDistinctLetters) // Privilégie le mot avec le plus de lettres distinctes
-            .ToUpperInvariant();
+            ?.ToUpperInvariant() ?? string.Empty;
     }
 
     public void ProcessResponse(string guess, string result)

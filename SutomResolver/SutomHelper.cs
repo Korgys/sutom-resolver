@@ -103,7 +103,7 @@ public static class SutomHelper
         return normalized.Length > 0 ? normalized[0] : null;
     }
 
-    private static string NormalizeString(string input)
+    internal static string NormalizeString(string input)
     {
         var normalizedString = input.Normalize(NormalizationForm.FormD);
         var stringBuilder = new StringBuilder();

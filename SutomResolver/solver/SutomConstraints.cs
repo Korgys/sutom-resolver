@@ -62,16 +62,12 @@ public sealed class SutomConstraints
             var guessedLetter = guess[i];
             var resultChar = result[i];
 
-            guessedLetterCounts[guessedLetter] = guessedLetterCounts.TryGetValue(guessedLetter, out var guessedCount)
-                ? guessedCount + 1
-                : 1;
+            IncrementCount(guessedLetterCounts, guessedLetter);
 
             if (IsFixedLetter(resultChar))
             {
                 constraints._fixedLettersByPosition[i] = guessedLetter;
-                matchedLetterCounts[guessedLetter] = matchedLetterCounts.TryGetValue(guessedLetter, out var matchedCount)
-                    ? matchedCount + 1
-                    : 1;
+                IncrementCount(matchedLetterCounts, guessedLetter);
                 continue;
             }
 
@@ -82,9 +78,7 @@ public sealed class SutomConstraints
 
             if (resultChar == '+')
             {
-                matchedLetterCounts[guessedLetter] = matchedLetterCounts.TryGetValue(guessedLetter, out var matchedCount)
-                    ? matchedCount + 1
-                    : 1;
+                IncrementCount(matchedLetterCounts, guessedLetter);
             }
         }
 
@@ -187,7 +181,7 @@ public sealed class SutomConstraints
         var counts = new Dictionary<char, int>();
         foreach (var letter in word)
         {
-            counts[letter] = counts.TryGetValue(letter, out var count) ? count + 1 : 1;
+            IncrementCount(counts, letter);
         }
 
         foreach (var (letter, constraint) in _letterCountConstraints)
@@ -226,8 +220,13 @@ public sealed class SutomConstraints
         forbiddenLetters.Add(letter);
     }
 
+    private static void IncrementCount(Dictionary<char, int> counts, char letter)
+    {
+        counts[letter] = counts.TryGetValue(letter, out var count) ? count + 1 : 1;
+    }
+
     private static bool IsFixedLetter(char resultChar)
     {
-        return resultChar != '_' && resultChar != '+';
+        return resultChar is not ('_' or '?' or '+');
     }
 }

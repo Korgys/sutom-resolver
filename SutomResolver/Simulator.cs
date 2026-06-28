@@ -1,7 +1,5 @@
 ﻿using SutomResolver.solver;
 using System.Diagnostics;
-using System.Globalization;
-using System.Text;
 
 namespace SutomResolver;
 
@@ -21,7 +19,7 @@ public class Simulator<T> where T : ISolver, new()
     public float Turns { get; set; } = 0;
     public float Wins { get; set; } = 0;
     public float Loses { get; set; } = 0;
-    public long Runtime {  get; set; } = 0;
+    public long Runtime { get; set; } = 0;
     
     public void EmulateGames(bool displayLogs = true)
     {
@@ -36,8 +34,8 @@ public class Simulator<T> where T : ISolver, new()
         for (int i = 1; i <= NumberOfGames; i++)
         {
             // Mot à deviner
-            var targetWord = NormalizeString(_wordCorpus[_random.Next(_wordCorpus.Count)].ToUpper());
-            Console.WriteLine($"{i}) Mot à deviner : {targetWord}");
+            var targetWord = SutomHelper.NormalizeString(_wordCorpus[_random.Next(_wordCorpus.Count)]);
+            if (displayLogs) Console.WriteLine($"{i}) Mot à deviner : {targetWord}");
 
             // Exemple ____ pour LAIT
             var pattern = new string('_', targetWord.Length);
@@ -100,25 +98,4 @@ public class Simulator<T> where T : ISolver, new()
         Console.WriteLine($"Runtime : {Runtime}");
     }
 
-    /// <summary>
-    /// Formatte le mot reçu lors de l'émulation des jeux.
-    /// </summary>
-    /// <param name="input"></param>
-    /// <returns></returns>
-    private static string NormalizeString(string input)
-    {
-        var normalizedString = input.Normalize(NormalizationForm.FormD);
-        var stringBuilder = new StringBuilder();
-
-        foreach (var c in normalizedString)
-        {
-            var unicodeCategory = CharUnicodeInfo.GetUnicodeCategory(c);
-            if (unicodeCategory != UnicodeCategory.NonSpacingMark)
-            {
-                stringBuilder.Append(c);
-            }
-        }
-
-        return stringBuilder.ToString().Normalize(NormalizationForm.FormC).ToUpper();
-    }
 }

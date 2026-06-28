@@ -16,6 +16,26 @@ public class SolverCoverageTests
     }
 
     [TestMethod]
+    public void V1Solver_GetNextGuess_ShouldReturnEmpty_WhenNoCandidatesRemain()
+    {
+        var solver = new SutomResolver.solver.v1.Solver();
+        solver.Initialize("_____");
+        solver.CandidatesWords = [];
+
+        Assert.AreEqual(string.Empty, solver.GetNextGuess());
+    }
+
+    [TestMethod]
+    public void V1Solver_Initialize_ShouldFilterCandidatesByInitialPattern()
+    {
+        var solver = new SutomResolver.solver.v1.Solver();
+        solver.Initialize("a____");
+
+        Assert.IsTrue(solver.CandidatesWords.Count > 0);
+        Assert.IsTrue(solver.CandidatesWords.All(word => word.StartsWith('A')));
+    }
+
+    [TestMethod]
     public void V2Solver_ProcessResponse_ShouldFilterByMisplacedAndAbsentLetters()
     {
         var solver = new SutomResolver.solver.v2.Solver();

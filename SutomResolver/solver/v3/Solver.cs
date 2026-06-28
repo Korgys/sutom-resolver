@@ -21,7 +21,7 @@ public class Solver : ISolver
     {
         AbsentLetters = [];
         ImpossiblePatterns = [];
-        CandidatesWords = SutomHelper.LoadWordsFromFile(pattern.Length);
+        CandidatesWords = SolverHelper.LoadCandidatesMatchingPattern(pattern);
         HeuristicValues = HeuristicsStatsHelper.GetHeuristicValues(CandidatesWords, pattern);
         _constraints = SutomConstraints.CreateEmpty(pattern.Length);
     }
@@ -29,18 +29,9 @@ public class Solver : ISolver
     public string GetNextGuess()
     {
         // Détermine le meilleur candidat à partir d'un score basé sur la variété des lettres utilisées et leur score de fréquence
-        var bestMatches = CandidatesWords
-            .Select(word => 
-                new 
-                { 
-                    Word = word, 
-                    Score = HeuristicsStatsHelper.CalculateHeuristicScore(HeuristicValues, word) 
-                })
-            .OrderByDescending(w => w.Score);
-
-        return bestMatches
-            .Select(w => w.Word)
-            .FirstOrDefault()?.ToUpper();
+        return CandidatesWords
+            .MaxBy(word => HeuristicsStatsHelper.CalculateHeuristicScore(HeuristicValues, word))?
+            .ToUpperInvariant() ?? string.Empty;
     }
 
     public void ProcessResponse(string guess, string result)

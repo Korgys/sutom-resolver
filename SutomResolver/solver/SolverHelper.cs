@@ -2,6 +2,18 @@
 
 internal static class SolverHelper
 {
+    internal static List<string> LoadCandidatesMatchingPattern(string pattern)
+    {
+        var normalizedPattern = SutomHelper.NormalizeString(pattern);
+        var firstLetter = normalizedPattern.Length > 0 && !IsPatternWildcard(normalizedPattern[0])
+            ? normalizedPattern[0]
+            : (char?)null;
+
+        return SutomHelper.LoadWordsFromFile(normalizedPattern.Length, firstLetter)
+            .Where(word => MatchesPattern(word, normalizedPattern, null))
+            .ToList();
+    }
+
     internal static HashSet<char> GetMisplacedLetters(string guess, string result)
     {
         var misplacedLetters = new HashSet<char>();
@@ -17,19 +29,13 @@ internal static class SolverHelper
 
     internal static string GetImpossiblePattern(string guess, string result)
     {
-        var impossiblePattern = "";
+        var impossiblePattern = new char[result.Length];
         for (int i = 0; i < result.Length; i++)
         {
-            if (result[i] == '+')
-            {
-                impossiblePattern += guess[i];
-            }
-            else
-            {
-                impossiblePattern += "_";
-            }
+            impossiblePattern[i] = result[i] == '+' ? guess[i] : '_';
         }
-        return impossiblePattern;
+
+        return new string(impossiblePattern);
     }
 
     internal static bool MatchesPattern(
@@ -61,7 +67,7 @@ internal static class SolverHelper
         for (int i = 0; i < pattern.Length; i++)
         {
             var patternChar = pattern[i];
-            if (patternChar != '_' && patternChar != '?' && patternChar != '+' && word[i] != patternChar)
+            if (!IsPatternWildcard(patternChar) && word[i] != patternChar)
             {
                 return false;
             }
@@ -75,7 +81,7 @@ internal static class SolverHelper
     {
         for (int i = 0; i < pattern.Length; i++)
         {
-            if (pattern[i] == '_')
+            if (IsAbsentMarker(pattern[i]))
             {
                 char c = word[i];
                 if (!misplacedLetters.Contains(c))
@@ -96,4 +102,8 @@ internal static class SolverHelper
         foreach (var letter in word) set.Add(letter);
         return set.Count;
     }
+
+    private static bool IsPatternWildcard(char marker) => marker is '_' or '?' or '+';
+
+    private static bool IsAbsentMarker(char marker) => marker is '_' or '?';
 }

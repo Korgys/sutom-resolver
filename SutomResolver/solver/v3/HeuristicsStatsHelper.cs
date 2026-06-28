@@ -116,10 +116,10 @@ public class HeuristicsStatsHelper
     private static byte[] BuildOrderedWordsFingerprint(List<string> words)
     {
         using var hash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
+        Span<byte> wordLengthBytes = stackalloc byte[sizeof(int)];
 
         foreach (var word in words)
         {
-            Span<byte> wordLengthBytes = stackalloc byte[sizeof(int)];
             BinaryPrimitives.WriteInt32LittleEndian(wordLengthBytes, word.Length);
             hash.AppendData(wordLengthBytes);
 
@@ -142,7 +142,7 @@ public class HeuristicsStatsHelper
             }
         }
 
-        score *= word.Distinct().Count();
+        score *= SolverHelper.CountDistinctLetters(word);
 
         return score;
     }

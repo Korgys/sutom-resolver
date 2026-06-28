@@ -56,4 +56,17 @@ public class SutomConstraintsTests
         Assert.IsTrue(constraints.Matches("BACDE"));
         Assert.IsFalse(constraints.Matches("BAADE"));
     }
+
+    [TestMethod]
+    public void FromGuessAndResult_ShouldTreatQuestionMarkLikeAbsentMarker()
+    {
+        var constraints = SutomResolver.solver.SutomConstraints.FromGuessAndResult("ABCDE", "?????");
+
+        Assert.IsTrue(constraints.IsLetterForbiddenAt(0, 'A'));
+        Assert.IsTrue(constraints.TryGetLetterConstraint('A', out var aConstraint));
+        Assert.AreEqual(0, aConstraint.Minimum);
+        Assert.AreEqual(0, aConstraint.Maximum);
+        Assert.IsFalse(constraints.Matches("ABCDE"));
+        Assert.IsTrue(constraints.Matches("FGHIJ"));
+    }
 }

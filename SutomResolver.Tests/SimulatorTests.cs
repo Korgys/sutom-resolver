@@ -59,6 +59,29 @@ public class SimulatorTests
     }
 
     [TestMethod]
+    public void EmulateGames_ShouldNotWriteLogs_WhenDisplayLogsIsFalse()
+    {
+        var simulator = new Simulator<solver.v1.Solver>(new Random(12345), DeterministicCorpus)
+        {
+            NumberOfGames = 1
+        };
+        using var output = new StringWriter();
+        var originalOutput = Console.Out;
+
+        try
+        {
+            Console.SetOut(output);
+            simulator.EmulateGames(displayLogs: false);
+        }
+        finally
+        {
+            Console.SetOut(originalOutput);
+        }
+
+        Assert.AreEqual(string.Empty, output.ToString());
+    }
+
+    [TestMethod]
     public void Initialize_ProcessResponse_GetNextGuess_ShouldConvergeToRemainingCandidate()
     {
         var solver = new solver.v4.Solver();
